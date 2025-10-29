@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		6079B4182EAF54C1000FD262 /* Factory in Frameworks */ = {isa = PBXBuildFile; productRef = 6079B4172EAF54C1000FD262 /* Factory */; };
+		6079B45A2EAF7999000FD262 /* BluProjectModel in Frameworks */ = {isa = PBXBuildFile; productRef = 6079B4592EAF7999000FD262 /* BluProjectModel */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		6079B3D92EAF4DAD000FD262 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +57,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6079B45A2EAF7999000FD262 /* BluProjectModel in Frameworks */,
+				6079B4182EAF54C1000FD262 /* Factory in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +85,7 @@
 				6079B3CA2EAF4DAC000FD262 /* BluProject */,
 				6079B3DB2EAF4DAD000FD262 /* BluProjectTests */,
 				6079B3E52EAF4DAD000FD262 /* BluProjectUITests */,
+				6079B4162EAF54BC000FD262 /* Frameworks */,
 				6079B3C92EAF4DAC000FD262 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -90,6 +98,13 @@
 				6079B3E22EAF4DAD000FD262 /* BluProjectUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		6079B4162EAF54BC000FD262 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -112,6 +127,8 @@
 			);
 			name = BluProject;
 			packageProductDependencies = (
+				6079B4172EAF54C1000FD262 /* Factory */,
+				6079B4592EAF7999000FD262 /* BluProjectModel */,
 			);
 			productName = BluProject;
 			productReference = 6079B3C82EAF4DAC000FD262 /* BluProject.app */;
@@ -195,6 +212,10 @@
 			);
 			mainGroup = 6079B3BF2EAF4DAC000FD262;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				6079B3F52EAF4F1F000FD262 /* XCRemoteSwiftPackageReference "Factory" */,
+				6079B4582EAF7999000FD262 /* XCLocalSwiftPackageReference "../BluProjectModel" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 6079B3C92EAF4DAC000FD262 /* Products */;
 			projectDirPath = "";
@@ -403,6 +424,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -431,6 +453,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -552,6 +575,36 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		6079B4582EAF7999000FD262 /* XCLocalSwiftPackageReference "../BluProjectModel" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../BluProjectModel;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		6079B3F52EAF4F1F000FD262 /* XCRemoteSwiftPackageReference "Factory" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/hmlongco/Factory.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.3;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		6079B4172EAF54C1000FD262 /* Factory */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6079B3F52EAF4F1F000FD262 /* XCRemoteSwiftPackageReference "Factory" */;
+			productName = Factory;
+		};
+		6079B4592EAF7999000FD262 /* BluProjectModel */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = BluProjectModel;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 6079B3C02EAF4DAC000FD262 /* Project object */;
 }
