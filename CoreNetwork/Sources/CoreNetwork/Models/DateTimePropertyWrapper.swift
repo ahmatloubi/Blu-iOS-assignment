@@ -15,7 +15,29 @@ public struct DateTime: Codable, Hashable, Sendable {
         self.wrappedValue = wrappedValue
     }
     
-private lazy var formatter: DateFormatter = {
+   public init(from decoder: Decoder) throws {
+        do {
+            let container = try decoder.singleValueContainer()
+            let stringValue = try container.decode(String.self)
+            wrappedValue = DateTimeFormatter.formatter.date(from: stringValue)
+        } catch {
+            wrappedValue = nil
+        }
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+       var container = encoder.singleValueContainer()
+       if let value = wrappedValue {
+           let dateString = DateTimeFormatter.formatter.string(from: value)
+           try container.encode(dateString)
+       } else {
+           try container.encodeNil()
+       }
+    }
+}
+
+struct DateTimeFormatter {
+    static let formatter: DateFormatter = {
     let formatter = DateFormatter()
     formatter.isLenient = true
     formatter.locale = Locale(identifier: "en_US_POSIX")
@@ -23,25 +45,4 @@ private lazy var formatter: DateFormatter = {
     formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
     return formatter
     }()
-    
-   public init(from decoder: Decoder) throws {
-        do {
-            let container = try decoder.singleValueContainer()
-            let stringValue = try container.decode(String.self)
-            wrappedValue = formatter.date(from: stringValue)
-        } catch {
-            wrappedValue = nil
-        }
-    }
-    
-    public mutating func encode(to encoder: Encoder) throws {
-       var container = encoder.singleValueContainer()
-
-       if let value = wrappedValue {
-           let dateString = formatter.string(from: value)
-           try container.encode(dateString)
-       } else {
-           try container.encodeNil()
-       }
-    }
 }

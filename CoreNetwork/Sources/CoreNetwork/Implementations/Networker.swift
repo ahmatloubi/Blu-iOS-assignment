@@ -1,7 +1,7 @@
 import Alamofire
 import Foundation
 
-class Networker: NetworkerProtocol {
+public class Networker: NetworkerProtocol {
     let errorDecodable: ErrorDecodableProtocol?
     
     public init(errorDecodable: ErrorDecodableProtocol? = nil) {

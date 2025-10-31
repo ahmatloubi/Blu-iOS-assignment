@@ -8,5 +8,5 @@
 import Foundation
 
 public enum Endpoints: String {
-    case getAllTransactions = "transfer-list"
+    case getAllTransactions = "/transfer-list"
 }

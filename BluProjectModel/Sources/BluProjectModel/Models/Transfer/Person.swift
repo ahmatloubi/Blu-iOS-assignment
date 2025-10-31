@@ -8,12 +8,12 @@
 import Foundation
 
 public struct Person: Codable, Sendable, Hashable {
-    public let name: String
+    public let fullName: String
     public let email: String?
     public let avatar: String?
     
     public init(name: String, email: String? = nil, avatar: String? = nil) {
-        self.name = name
+        self.fullName = name
         self.email = email
         self.avatar = avatar
     }

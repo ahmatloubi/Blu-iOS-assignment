@@ -7,4 +7,4 @@
 
 import Foundation
 
-enum HomePageState { case loading, loaded, error, empty, loadMore, refresh, search }
+enum HomePageState { case loading, loaded, error, empty, search }
