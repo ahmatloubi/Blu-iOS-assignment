@@ -11,13 +11,15 @@ import BluProjectModel
 
 class HomePageViewModel: ObservableObject {
     private let transferService: TransfersServiceProtocol
+    private let favoriteTransferService: FavoriteTransfersServiceProtocol
     
-    init(transferService: TransfersServiceProtocol) {
+    init(transferService: TransfersServiceProtocol, favoriteTransferService: FavoriteTransfersServiceProtocol) {
         self.transferService = transferService
+        self.favoriteTransferService = favoriteTransferService
         setupPublishers()
     }
     
-    @Published var transfers: [Transfer] = []
+    @Published var rowViewModels: [HomePageRowViewModel] = []
     @Published var state: HomePageState = .loading
     @Published var favoriteTransfers: [Transfer] = []
     @Published var canLoadMore: Bool = true
@@ -29,12 +31,12 @@ class HomePageViewModel: ObservableObject {
     private var pageSize: Int = 10
     
     private func setupPublishers() {
-        $transfers
+        $rowViewModels
             .map { $0.isEmpty }
             .map { $0 ? HomePageState.empty : .loaded }
             .assign(to: &$state)
         
-        $transfers
+        $rowViewModels
             .map(\.count)
             .map({$0.isMultiple(of: self.pageSize)})
             .assign(to: &$canLoadMore)
@@ -43,6 +45,7 @@ class HomePageViewModel: ObservableObject {
     func onAppear() {
         updateView {
             self.state = .loading
+            self.fetchFavoriteTransfers()
         }
         
         Task {
@@ -51,17 +54,31 @@ class HomePageViewModel: ObservableObject {
         
     }
     
+    
+    func fetchFavoriteTransfers() {
+        do {
+            favoriteTransfers = try favoriteTransferService.getFavoriteTransfers()
+        } catch {
+            updateView {
+                self.state = .error
+            }
+        }
+    }
+    
     func loadAtPage(_ page: Int) async {
         guard !isLoading else { return }
         isLoading = true
         self.page = page
         do {
             let transfers = try await transferService.fetchContacts(page: page)
+            let rowViewModels = transfers.map { transfer in
+                return HomePageRowViewModel(isFavorite: favoriteTransfers.contains(where: {$0.id == transfer.id }), transfer: transfer)
+            }
             updateView {
-                if page <= 1 {
-                    self.transfers = transfers
+                if page == 1 {
+                    self.rowViewModels = rowViewModels
                 } else {
-                    self.transfers.append(contentsOf: transfers)
+                    self.rowViewModels.append(contentsOf: rowViewModels)
                 }
             }
         } catch {

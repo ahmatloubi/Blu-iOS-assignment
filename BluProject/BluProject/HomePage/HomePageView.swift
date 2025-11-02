@@ -13,27 +13,32 @@ struct HomePageView: View {
     @State private var selectedIndex: Int?
     
     var body: some View {
-        stateView
-            .onAppear() {
-                viewModel.onAppear()
-            }
+        NavigationView {
+            stateView
+                .onAppear() {
+                    viewModel.onAppear()
+                }
+        }
     }
     
     @ViewBuilder
     var stateView: some View {
         switch viewModel.state {
         case .empty: Text("There is no item to show!")
-        case .error: Text("Error happened loading data!")
+        case .error: errorView
         case .loaded, .search: loadedDataView
         case .loading: ProgressView()
         }
     }
     
     var loadedDataView: some View {
-        VStack {
+        VStack(alignment: .leading) {
             if (!viewModel.favoriteTransfers.isEmpty) {
                 favoriteView
             }
+            Text("All")
+                .font(.title)
+                .bold()
             if #available(iOS 15.0, *) {
                 List(content: {
                     transfersForEachView
@@ -42,7 +47,9 @@ struct HomePageView: View {
                 .refreshable {
                     viewModel.refresh()
                 }
+                
             } else {
+                
                 RefreshableList {
                     VStack {
                         transfersForEachView
@@ -51,31 +58,34 @@ struct HomePageView: View {
                 } onRefresh: {
                     viewModel.refresh()
                 }
+                
             }
         }
+        .listStyle(.inset)
         .padding()
     }
     
     var favoriteView: some View {
-        ScrollView(.horizontal) {
-            HStack {
-                ForEach(viewModel.favoriteTransfers) { transfer in
-                    Text(transfer.person.fullName)
-                        .frame(width: 100, height: 100)
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
+        VStack(alignment: .leading) {
+            Text("Favorites")
+                .font(.title)
+                .bold()
+            ScrollView(.horizontal) {
+                HStack {
+                    ForEach(viewModel.favoriteTransfers) { transfer in
+                        HomePageFavoriteTransferRowView(name: transfer.person.fullName, imageURL: transfer.person.avatar ?? "", description: "\(transfer.moreInfo.numberOfTransfers)")
+                    }
                 }
             }
         }
     }
     
     var transfersForEachView: some View {
-        ForEach(viewModel.transfers) { transfer in
+        ForEach(viewModel.rowViewModels) { rowViewModel in
             NavigationLink {
-                Text(transfer.card.cardNumber)
+                DetailView(viewModel: .init(rowViewModel: rowViewModel))
             } label: {
-                HomeRowView(name: transfer.person.fullName, imageURL: transfer.person.avatar ?? "", description: transfer.card.cardNumber)
+                HomeRowView(name: rowViewModel.transfer.person.fullName, imageURL: rowViewModel.transfer.person.avatar ?? "", description: rowViewModel.transfer.card.cardNumber, isFavorite: rowViewModel.isFavorite)
             }
             
         }
@@ -88,16 +98,27 @@ struct HomePageView: View {
                 Spacer()
                 if #available(iOS 15.0, *) {
                     ProgressView()
+                        .foregroundColor(.black)
                         .task {
                             viewModel.loadMore()
                         }
                 } else {
                     ProgressView()
+                        .foregroundColor(.black)
                         .onAppear {
                             viewModel.loadMore()
                         }
                 }
                 Spacer()
+            }
+        }
+    }
+    
+    var errorView: some View {
+        VStack {
+            Text("Error happened loading data!")
+            Button("Retry") {
+                viewModel.onAppear()
             }
         }
     }

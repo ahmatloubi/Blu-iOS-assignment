@@ -3,7 +3,7 @@ import CoreNetwork
 
 public struct Transfer: Codable, Sendable, Hashable, Identifiable {
     public let person: Person
-    @DateTime var lastTransfer: Date?
+    @DateTime public var lastTransfer: Date?
     public let note: String?
     public let card: Card
     public let moreInfo: MoreInfo

@@ -9,17 +9,24 @@ import Foundation
 import Factory
 import BluProjectModel
 import CoreNetwork
+import CoreCache
 
 extension Container {
     var homePageViewModel: Factory<HomePageViewModel> {
         self {
-            HomePageViewModel(transferService: self.transferServices())
+            HomePageViewModel(transferService: self.transferServices(), favoriteTransferService: self.favoriteTransfersService())
         }
     }
     
     var transferServices: Factory<TransfersServiceProtocol> {
         self {
             TransfersService(networker: self.networkerProtocol(), urlBuilder: self.urlBuilder())
+        }
+    }
+    
+    var favoriteTransfersService: Factory<FavoriteTransfersServiceProtocol> {
+        self {
+            FavoriteTransfersService(cacher: self.cacher())
         }
     }
     
@@ -38,6 +45,12 @@ extension Container {
     var errorDecodable: Factory<ErrorDecodableProtocol> {
         self {
             ErrorDecodable()
+        }
+    }
+    
+    var cacher: Factory<CacherProtocol> {
+        self {
+            Cacher()
         }
     }
 }

@@ -23,8 +23,6 @@ public class URLBuilder: URLBuilderProtocol {
         urlComponents.scheme = "https"
         urlComponents.host = baseURL
         urlComponents.path = endpoint.rawValue
-        print(baseURL)
-        print(urlComponents.url)
         guard let url = urlComponents.url else {
             throw URLBuilderError.invalidURL
         }

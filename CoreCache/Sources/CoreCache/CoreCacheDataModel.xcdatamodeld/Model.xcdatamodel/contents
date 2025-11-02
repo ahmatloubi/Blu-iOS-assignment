@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23507" systemVersion="24B83" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="Cache" representedClassName="Cache" syncable="YES" codeGenerationType="class">
+        <attribute name="primaryKey" optional="YES" attributeType="String"/>
+        <attribute name="value" optional="YES" attributeType="Binary" valueTransformerName="NSSecureUnarchiveFromData" customClassName="Any"/>
+    </entity>
+</model>

@@ -12,27 +12,35 @@ struct HomeRowView: View {
     let name: String
     let imageURL: String
     let description: String
+    let isFavorite: Bool
     
     var body: some View {
         HStack(spacing: 15) {
             AsyncImageView(url: URL(string: imageURL))
                 .frame(width: 50, height: 50)
-                    .clipShape(Circle())
-                    .overlay(
-                        Circle().stroke(Color.white, lineWidth: 2)
-                    )
-                    .shadow(radius: 4)
+                .clipShape(Circle())
+                .overlay(
+                    Circle().stroke(Color.white, lineWidth: 2)
+                )
+                .shadow(radius: 4)
             VStack(alignment: .leading, spacing: 15) {
                 Text(name)
                 Text(description)
                     .foregroundColor(Color.secondary)
             }
-            .multilineTextAlignment(.leading)
+            
+            Spacer()
+            
+            if isFavorite {
+                Image(systemName: "star.fill")
+                    .foregroundColor(.yellow)
+                    .padding()
+            }
         }
     }
 }
 
 #Preview {
-    HomeRowView(name: "Amir", imageURL: "", description: "hi")
+    HomeRowView(name: "Amir", imageURL: "", description: "hi", isFavorite: true)
 }
 

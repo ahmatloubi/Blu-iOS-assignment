@@ -19,7 +19,8 @@ public struct DateTime: Codable, Hashable, Sendable {
         do {
             let container = try decoder.singleValueContainer()
             let stringValue = try container.decode(String.self)
-            wrappedValue = DateTimeFormatter.formatter.date(from: stringValue)
+            
+            wrappedValue = ISO8601DateFormatter().date(from: stringValue)
         } catch {
             wrappedValue = nil
         }
@@ -28,21 +29,10 @@ public struct DateTime: Codable, Hashable, Sendable {
     public func encode(to encoder: Encoder) throws {
        var container = encoder.singleValueContainer()
        if let value = wrappedValue {
-           let dateString = DateTimeFormatter.formatter.string(from: value)
+           let dateString = ISO8601DateFormatter().string(from: value)
            try container.encode(dateString)
        } else {
            try container.encodeNil()
        }
     }
-}
-
-struct DateTimeFormatter {
-    static let formatter: DateFormatter = {
-    let formatter = DateFormatter()
-    formatter.isLenient = true
-    formatter.locale = Locale(identifier: "en_US_POSIX")
-    formatter.timeZone = TimeZone(abbreviation: "IRST")!
-    formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
-    return formatter
-    }()
 }

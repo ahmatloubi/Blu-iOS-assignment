@@ -9,11 +9,11 @@ import SwiftUI
 
 struct AsyncImageView: View {
     @StateObject private var loader: ImageLoader
-
+    
     init(url: URL?) {
         _loader = StateObject(wrappedValue: ImageLoader(url: url))
     }
-
+    
     var body: some View {
         content
             .onAppear { loader.load() }
@@ -22,7 +22,17 @@ struct AsyncImageView: View {
     @ViewBuilder
     private var content: some View {
         if #available(iOS 15.0, *) {
-            AsyncImage(url: loader.url)
+            AsyncImage(url: loader.url) { image in
+                image
+                    .resizable()
+                    .scaledToFit()
+                
+            } placeholder: {
+                Circle()
+                    .redacted(reason: .placeholder)
+            }
+            
+            
         } else {
             Group {
                 if let image = loader.image {
@@ -30,8 +40,6 @@ struct AsyncImageView: View {
                         .resizable()
                 } else {
                     Circle()
-                        .scaledToFit()
-                        .opacity(0.3)
                         .redacted(reason: .placeholder)
                 }
             }
@@ -43,14 +51,14 @@ class ImageLoader: ObservableObject {
     @Published var image: UIImage?
     let url: URL?
     private var task: URLSessionDataTask?
-
+    
     init(url: URL?) {
         self.url = url
     }
-
+    
     func load() {
         guard let url = url, image == nil else { return }
-
+        
         task = URLSession.shared.dataTask(with: url) { data, _, _ in
             if let data = data, let image = UIImage(data: data) {
                 Task { @MainActor in
@@ -60,7 +68,7 @@ class ImageLoader: ObservableObject {
         }
         task?.resume()
     }
-
+    
     deinit {
         task?.cancel()
     }
