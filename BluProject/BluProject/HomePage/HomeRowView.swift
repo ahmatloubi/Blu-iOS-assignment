@@ -41,6 +41,6 @@ struct HomeRowView: View {
 }
 
 #Preview {
-    HomeRowView(name: "Amir", imageURL: "", description: "hi", isFavorite: true)
+    HomeRowView(name: "", imageURL: "", description: "", isFavorite: true)
 }
 

@@ -24,11 +24,10 @@ struct HomePageFavoriteTransferRowView: View {
             Text(name)
             Text(description)
                 .foregroundColor(Color.secondary)
-            
         }
     }
 }
 
 #Preview {
-    HomePageFavoriteTransferRowView(name: "Amir", imageURL: "", description: "Salam!")
+    HomePageFavoriteTransferRowView(name: "", imageURL: "", description: "")
 }
