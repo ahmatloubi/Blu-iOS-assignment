@@ -7,43 +7,42 @@
 
 import SwiftUI
 
-struct RefreshableList<Content: View>: View {
-    let content: () -> Content
-    let onRefresh: () -> Void
-
-    @State private var isRefreshing = false
-
-    var body: some View {
-        List {
-            content()
-        }
-        .background(RefreshControl(isRefreshing: $isRefreshing, onRefresh: onRefresh))
-    }
-}
-
-struct RefreshControl: UIViewRepresentable {
+struct RefreshableScrollView<Content: View>: UIViewRepresentable {
+    var onRefresh: () -> Void
     @Binding var isRefreshing: Bool
-    let onRefresh: () -> Void
+    var content: () -> Content
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(isRefreshing: $isRefreshing, onRefresh: onRefresh)
+        Coordinator(onRefresh: onRefresh, isRefreshing: $isRefreshing)
     }
 
-    func makeUIView(context: Context) -> some UIView {
-        let view = UIView(frame: .zero)
-        DispatchQueue.main.async {
-            guard let scrollView = view.superview(of: UIScrollView.self) else { return }
-            let refreshControl = UIRefreshControl()
-            refreshControl.addTarget(context.coordinator,
-                                     action: #selector(Coordinator.handleRefresh),
-                                     for: .valueChanged)
-            scrollView.refreshControl = refreshControl
-            context.coordinator.refreshControl = refreshControl
-        }
-        return view
+    func makeUIView(context: Context) -> UIScrollView {
+        let scrollView = UIScrollView()
+
+        let hostingController = UIHostingController(rootView: content())
+        hostingController.view.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(hostingController.view)
+
+        NSLayoutConstraint.activate([
+            hostingController.view.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
+            hostingController.view.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
+            hostingController.view.topAnchor.constraint(equalTo: scrollView.topAnchor),
+            hostingController.view.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
+            hostingController.view.widthAnchor.constraint(equalTo: scrollView.widthAnchor)
+        ])
+
+        let refreshControl = UIRefreshControl()
+        refreshControl.addTarget(context.coordinator, action: #selector(Coordinator.handleRefresh), for: .valueChanged)
+        scrollView.refreshControl = refreshControl
+        context.coordinator.refreshControl = refreshControl
+        context.coordinator.hostingController = hostingController
+
+        return scrollView
     }
 
-    func updateUIView(_ uiView: UIViewType, context: Context) {
+    func updateUIView(_ scrollView: UIScrollView, context: Context) {
+        context.coordinator.hostingController?.rootView = content()
+
         if isRefreshing {
             context.coordinator.refreshControl?.beginRefreshing()
         } else {
@@ -52,31 +51,20 @@ struct RefreshControl: UIViewRepresentable {
     }
 
     class Coordinator: NSObject {
+        var onRefresh: () -> Void
         @Binding var isRefreshing: Bool
-        let onRefresh: () -> Void
         weak var refreshControl: UIRefreshControl?
+        weak var hostingController: UIHostingController<Content>?
 
-        init(isRefreshing: Binding<Bool>, onRefresh: @escaping () -> Void) {
-            _isRefreshing = isRefreshing
+        init(onRefresh: @escaping () -> Void, isRefreshing: Binding<Bool>) {
             self.onRefresh = onRefresh
+            _isRefreshing = isRefreshing
         }
 
         @objc func handleRefresh() {
+            guard !isRefreshing else { return }
             isRefreshing = true
             onRefresh()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { 
-                self.isRefreshing = false
-            }
         }
     }
 }
-
-extension UIView {
-    func superview<T>(of type: T.Type) -> T? {
-        if let superview = superview as? T {
-            return superview
-        }
-        return superview?.superview(of: type)
-    }
-}
-

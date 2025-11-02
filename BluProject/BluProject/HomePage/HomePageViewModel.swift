@@ -23,8 +23,14 @@ class HomePageViewModel: ObservableObject {
     @Published var state: HomePageState = .loading
     @Published var favoriteTransfers: [Transfer] = []
     @Published var canLoadMore: Bool = true
+    @Published var searchText: String = ""
+    @Published var isSearhing: Bool = false
+    @Published var isRefreshing: Bool = false
     
     private var isLoading: Bool = false
+    
+    private var lastRowViewModels: [HomePageRowViewModel] = []
+    private var lastFavoriteTransfer: [Transfer] = []
     
     private var page: Int = 1
     
@@ -33,12 +39,32 @@ class HomePageViewModel: ObservableObject {
     private func setupPublishers() {
         $rowViewModels
             .map { $0.isEmpty }
-            .map { $0 ? HomePageState.empty : .loaded }
+            .map { ($0 && self.isSearhing) ? HomePageState.empty : .loaded }
             .assign(to: &$state)
         
         $rowViewModels
             .map(\.count)
             .map({$0.isMultiple(of: self.pageSize)})
+            .assign(to: &$canLoadMore)
+        
+        $searchText
+            .map { searchText in
+                guard !searchText.isEmpty else { return self.lastRowViewModels }
+                let filteredRows = self.lastRowViewModels.filter { $0.transfer.person.fullName.contains(searchText) }
+                return filteredRows
+            }
+            .assign(to: &$rowViewModels)
+        
+        $searchText
+            .map { searchText in
+                guard !searchText.isEmpty else { return self.lastFavoriteTransfer }
+                let filteredRows = self.lastFavoriteTransfer.filter { $0.person.fullName.contains(searchText) }
+                return filteredRows
+            }
+            .assign(to: &$favoriteTransfers)
+        
+        $isSearhing
+            .map { !$0 }
             .assign(to: &$canLoadMore)
     }
     
@@ -46,6 +72,7 @@ class HomePageViewModel: ObservableObject {
         updateView {
             self.state = .loading
             self.fetchFavoriteTransfers()
+            self.isSearhing = false
         }
         
         Task {
@@ -58,6 +85,7 @@ class HomePageViewModel: ObservableObject {
     func fetchFavoriteTransfers() {
         do {
             favoriteTransfers = try favoriteTransferService.getFavoriteTransfers()
+            lastFavoriteTransfer = favoriteTransfers
         } catch {
             updateView {
                 self.state = .error
@@ -81,6 +109,7 @@ class HomePageViewModel: ObservableObject {
                     self.rowViewModels.append(contentsOf: rowViewModels)
                 }
             }
+            lastRowViewModels = rowViewModels
         } catch {
             updateView {
                 self.state = .error
@@ -94,8 +123,11 @@ class HomePageViewModel: ObservableObject {
             update()
         }
     }
-   
+    
     func refresh() {
+        updateView {
+            self.searchText = ""
+        }
         Task {
             await loadAtPage(1)
         }

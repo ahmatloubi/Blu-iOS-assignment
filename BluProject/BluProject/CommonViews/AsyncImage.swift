@@ -29,6 +29,7 @@ struct AsyncImageView: View {
                 
             } placeholder: {
                 Circle()
+                    .foregroundColor(.secondary)
                     .redacted(reason: .placeholder)
             }
             

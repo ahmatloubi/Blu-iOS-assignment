@@ -24,11 +24,15 @@ struct HomePageView: View {
     @ViewBuilder
     var stateView: some View {
         switch viewModel.state {
-        case .empty: Text("There is no item to show!")
+        case .empty: loadedDataView
         case .error: errorView
         case .loaded, .search: loadedDataView
         case .loading: ProgressView()
         }
+    }
+    
+    var emptyView: some View {
+        Text("There is no item to show!")
     }
     
     var loadedDataView: some View {
@@ -39,7 +43,7 @@ struct HomePageView: View {
             Text("All")
                 .font(.title)
                 .bold()
-            if #available(iOS 15.0, *) {
+            if #available(iOS 17.0, *) {
                 List(content: {
                     transfersForEachView
                     loadMoreView
@@ -47,17 +51,16 @@ struct HomePageView: View {
                 .refreshable {
                     viewModel.refresh()
                 }
-                
+                .searchable(text: $viewModel.searchText, isPresented: $viewModel.isSearhing)
             } else {
-                
-                RefreshableList {
+                RefreshableScrollView(onRefresh: {
+                    viewModel.refresh()
+                }, isRefreshing: $viewModel.isRefreshing, content: {
                     VStack {
                         transfersForEachView
                         loadMoreView
                     }
-                } onRefresh: {
-                    viewModel.refresh()
-                }
+                })
                 
             }
         }
@@ -73,7 +76,12 @@ struct HomePageView: View {
             ScrollView(.horizontal) {
                 HStack {
                     ForEach(viewModel.favoriteTransfers) { transfer in
-                        HomePageFavoriteTransferRowView(name: transfer.person.fullName, imageURL: transfer.person.avatar ?? "", description: "\(transfer.moreInfo.numberOfTransfers)")
+                        NavigationLink(destination: DetailView(viewModel: .init(rowViewModel: .init(isFavorite: true, transfer: transfer)))) {
+                            HomePageFavoriteTransferRowView(name: transfer.person.fullName, imageURL: transfer.person.avatar ?? "", description: transfer.card.cardType)
+                                .foregroundColor(.primary)
+                                .padding()
+                        }
+                        
                     }
                 }
             }
