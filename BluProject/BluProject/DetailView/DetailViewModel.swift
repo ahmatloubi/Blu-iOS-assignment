@@ -23,6 +23,7 @@ class DetailViewModel: ObservableObject {
     @Published var transfer: Transfer
     @Published var amount: String = ""
     @Published var lastTransferDate: String = "-"
+    @Published var isErrorAlertPresented: Bool = false
     
     private func setupPublishers() {
         $transfer
@@ -47,6 +48,7 @@ class DetailViewModel: ObservableObject {
             isFavorite.toggle()
         } catch (let error) {
             print("Error happened: \(error)")
+            isErrorAlertPresented = true
         }
     }
     

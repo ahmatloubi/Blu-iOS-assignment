@@ -23,6 +23,7 @@ struct DetailView: View {
                         .shadow(radius: 4)
                     Spacer()
                 }
+                
                 HStack {
                     VStack(alignment: .leading, spacing: 20) {
                         Label {
@@ -69,6 +70,9 @@ struct DetailView: View {
                         .foregroundColor(.yellow)
                 }
             }
+        }
+        .alert(isPresented: $viewModel.isErrorAlertPresented) {
+            Alert(title: Text("Something went wrong"), message: Text(""), dismissButton: .default(Text("OK")))
         }
     }
 }
