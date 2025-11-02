@@ -56,6 +56,22 @@ struct DetailView: View {
                         } icon: {
                             Image(systemName: "calendar")
                         }
+                        
+                        if let note = viewModel.transfer.note {
+                            Label {
+                                VStack {
+                                    Text(note)
+                                    Spacer()
+                                }
+
+                            } icon: {
+                                VStack {
+                                    Image(systemName: "note.text")
+                                    Spacer()
+                                }
+                            }
+                            
+                        }
                     }
                     Spacer()
                 }
