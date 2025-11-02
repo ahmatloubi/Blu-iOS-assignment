@@ -10,7 +10,6 @@ import Factory
 
 struct HomePageView: View {
     @InjectedObject(\.homePageViewModel) var viewModel
-    @State private var selectedIndex: Int?
     
     var body: some View {
         NavigationView {
