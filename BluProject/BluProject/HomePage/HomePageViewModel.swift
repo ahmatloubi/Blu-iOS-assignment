@@ -50,7 +50,7 @@ class HomePageViewModel: ObservableObject {
         $searchText
             .map { searchText in
                 guard !searchText.isEmpty else { return self.lastRowViewModels }
-                let filteredRows = self.lastRowViewModels.filter { $0.transfer.person.fullName.contains(searchText) }
+                let filteredRows = self.lastRowViewModels.filter { $0.transfer.person.fullName.lowercased().contains(searchText.lowercased()) }
                 return filteredRows
             }
             .assign(to: &$rowViewModels)
