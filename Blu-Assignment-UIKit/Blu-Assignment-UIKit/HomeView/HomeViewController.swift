@@ -1,4 +1,5 @@
 import UIKit
+import Combine
 import Factory
 import BluProjectModel
 
@@ -12,76 +13,51 @@ final class HomeViewController: UIViewController {
         spinner.hidesWhenStopped = true
         return spinner
     }()
-
     
-    @Injected(\.transferServices) private var transferServices
-    @Injected(\.favoriteTransfersService) private var favoriteTransfersService
-    
-    private var transfers: [Transfer] = []
-    
-    private var currentPage = 1
-    private var isLoading = false
-    private var hasMorePages = true
-
+    private let viewModel = HomeViewModel()
+    private var cancellables = Set<AnyCancellable>()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
         setupCollectionView()
         setupTableView()
-        initialLoad()
+        bindViewModel()
     }
     
-    private func initialLoad() {
-        currentPage = 1
-        hasMorePages = true
-        loadPage(page: currentPage, isRefreshing: false)
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        viewModel.initialLoad()
     }
     
-    private func loadPage(page: Int, isRefreshing: Bool) {
-        guard !isLoading && hasMorePages else { return }
-        isLoading = true
-
-        if !isRefreshing {
-            updateView {
-                self.footerSpinner.startAnimating()
+    private func bindViewModel() {
+        viewModel.$transferRowViewModels
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.tableView.reloadData()
             }
-        }
-
-        Task {
-            do {
-                let newTransfers = try await transferServices.fetchContacts(page: page)
-
-                updateView {
-                    if isRefreshing {
-                        self.transfers = newTransfers
-                    } else {
-                        self.transfers.append(contentsOf: newTransfers)
-                    }
-
-                    self.tableView.reloadData()
-
-                    if newTransfers.isEmpty {
-                        self.hasMorePages = false
-                    }
-
-                    self.refreshControl.endRefreshing()
+            .store(in: &cancellables)
+        
+        viewModel.$favoriteTransfers
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.collectionView.reloadData()
+            }
+            .store(in: &cancellables)
+        
+        viewModel.$isLoading
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isLoading in
+                guard let self else { return }
+                if isLoading {
+                    self.footerSpinner.startAnimating()
+                } else {
                     self.footerSpinner.stopAnimating()
-                }
-            } catch {
-                print("Error fetching page \(page): \(error)")
-                await MainActor.run {
                     self.refreshControl.endRefreshing()
-                    self.footerSpinner.stopAnimating()
                 }
             }
-
-            isLoading = false
-        }
+            .store(in: &cancellables)
     }
-
-
-
 
     // MARK: - Collection View
     private func setupCollectionView() {
@@ -105,18 +81,16 @@ final class HomeViewController: UIViewController {
             collectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            collectionView.heightAnchor.constraint(equalToConstant: 110) // story-style height
+            collectionView.heightAnchor.constraint(equalToConstant: 110)
         ])
     }
 
-    // MARK: - Table View (Below Collection View)
+    // MARK: - Table View
     private func setupTableView() {
         tableView = UITableView()
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.delegate = self
         tableView.dataSource = self
-
-        // Register a simple cell
         tableView.register(TransferTableViewCell.self, forCellReuseIdentifier: TransferTableViewCell.reuseIdentifier)
         refreshControl.addTarget(self, action: #selector(refreshData), for: .valueChanged)
         tableView.refreshControl = refreshControl
@@ -130,22 +104,10 @@ final class HomeViewController: UIViewController {
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
-        
-        
     }
     
     @objc private func refreshData() {
-        currentPage = 1
-        hasMorePages = true
-        loadPage(page: currentPage, isRefreshing: true)
-    }
-
-
-    
-    func updateView(_ update: @escaping () -> Void) {
-        Task { @MainActor in
-            update()
-        }
+        viewModel.refresh()
     }
 }
 
@@ -153,7 +115,7 @@ final class HomeViewController: UIViewController {
 extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        15
+        viewModel.favoriteTransfers.count
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -162,17 +124,18 @@ extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSour
             for: indexPath
         ) as? FavoriteTransferCell else { return UICollectionViewCell() }
 
-        let name = "User \(indexPath.item + 1)"
-        let imageURL = "https://randomuser.me/api/portraits/men/\(indexPath.item + 10).jpg"
+        let favoriteTransfer = viewModel.favoriteTransfers[indexPath.row]
+        
+        
 
-        cell.configure(name: name, imageURL: imageURL)
+        cell.configure(name: favoriteTransfer.person.fullName, imageURL: favoriteTransfer.person.avatar ?? "")
         return cell
     }
 
     func collectionView(_ collectionView: UICollectionView,
                         layout collectionViewLayout: UICollectionViewLayout,
                         sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: 80, height: 110)
+        CGSize(width: 80, height: 110)
     }
 }
 
@@ -180,30 +143,37 @@ extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSour
 extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return transfers.count
+        viewModel.transferRowViewModels.count
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-
         guard let cell = tableView.dequeueReusableCell(
             withIdentifier: TransferTableViewCell.reuseIdentifier,
             for: indexPath
         ) as? TransferTableViewCell else { return UITableViewCell() }
-        let transfer = transfers[indexPath.row]
-        cell.configure(name: transfer.person.fullName, cardNumber: transfer.card.cardNumber, url: transfer.person.avatar)
+        
+        let rowVM = viewModel.transferRowViewModels[indexPath.row]
+        cell.configure(
+            name: rowVM.transfer.person.fullName,
+            cardNumber: rowVM.transfer.card.cardNumber,
+            url: rowVM.transfer.person.avatar,
+            isFavorite: rowVM.isFavorite
+        )
         return cell
     }
 
+    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        viewModel.loadNextPageIfNeeded(currentIndex: indexPath.row)
+    }
+    
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 100
     }
     
-    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-        let thresholdIndex = transfers.count - 3
-        if indexPath.row == thresholdIndex && !isLoading && hasMorePages {
-            currentPage += 1
-            loadPage(page: currentPage, isRefreshing: false)
-        }
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        let rowVM = viewModel.transferRowViewModels[indexPath.row]
+        let detailVC = TransferDetailViewController(transfer: rowVM.transfer, isFavorite: rowVM.isFavorite)
+        navigationController?.pushViewController(detailVC, animated: true)
     }
-
 }

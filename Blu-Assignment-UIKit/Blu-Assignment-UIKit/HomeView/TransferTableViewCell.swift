@@ -20,6 +20,7 @@ class TransferTableViewCell: UITableViewCell {
         super.init(coder: coder)
         setupUI()
     }
+    
     private let nameLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16, weight: .bold)
@@ -35,12 +36,20 @@ class TransferTableViewCell: UITableViewCell {
         return label
     }()
     
+    private let favoriteImage: UIImageView = {
+        let imageView = UIImageView()
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.image = UIImage(systemName: "star.fill")
+        return imageView
+    }()
+    
     private let asyncImageView = CircularImageView(frame: .zero)
     
     private func setupUI() {
         contentView.addSubview(nameLabel)
         contentView.addSubview(cardNumberLabel)
         contentView.addSubview(asyncImageView)
+        contentView.addSubview(favoriteImage)
         
         asyncImageView.translatesAutoresizingMaskIntoConstraints = false
         asyncImageView.widthAnchor.constraint(equalToConstant: 70).isActive = true
@@ -50,18 +59,25 @@ class TransferTableViewCell: UITableViewCell {
         
         nameLabel.leadingAnchor.constraint(equalTo: asyncImageView.trailingAnchor, constant: 10).isActive = true
         nameLabel.topAnchor.constraint(equalTo: asyncImageView.topAnchor).isActive = true
-        nameLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: 5).isActive = true
+        nameLabel.trailingAnchor.constraint(equalTo: favoriteImage.leadingAnchor, constant: 5).isActive = true
         nameLabel.heightAnchor.constraint(equalToConstant: 30).isActive = true
         
         cardNumberLabel.leadingAnchor.constraint(equalTo: asyncImageView.trailingAnchor, constant: 10).isActive = true
         cardNumberLabel.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 5).isActive = true
-        cardNumberLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: 5).isActive = true
+        cardNumberLabel.trailingAnchor.constraint(equalTo: favoriteImage.leadingAnchor, constant: 5).isActive = true
         cardNumberLabel.heightAnchor.constraint(equalToConstant: 30).isActive = true
+        
+        favoriteImage.widthAnchor.constraint(equalToConstant: 25).isActive = true
+        favoriteImage.heightAnchor.constraint(equalToConstant: 25).isActive = true
+        favoriteImage.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20).isActive = true
+        favoriteImage.centerYAnchor.constraint(equalTo: contentView.centerYAnchor).isActive = true
+        favoriteImage.tintColor = .systemYellow
     }
     
-    func configure(name: String, cardNumber: String, url: String?) {
+    func configure(name: String, cardNumber: String, url: String?, isFavorite: Bool) {
         nameLabel.text = name
         cardNumberLabel.text = cardNumber
         asyncImageView.loadImage(from: url)
+        favoriteImage.isHidden = !isFavorite
     }
 }
